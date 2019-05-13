@@ -1,0 +1,169 @@
+import java.io.*;
+import java.net.*;
+import java.net.InetAddress;
+
+/*
+class QueryHandler implements Runnable {
+
+    protected Socket clientSocket;
+
+    public QueryHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+    }
+    
+    public void run() {
+	InputStream inp = null;
+        BufferedReader brinp = null;
+        DataOutputStream out = null;
+
+	try {
+            inp = socket.getInputStream();
+            brinp = new BufferedReader(new InputStreamReader(inp));
+            out = new DataOutputStream(socket.getOutputStream());
+
+	} catch (IOException e) {
+            return;
+        }
+
+	String line;
+	
+	while (true) {
+            try {
+                line = brinp.readLine();
+                if ((line == null) || line.equalsIgnoreCase("QUIT")) {
+                    socket.close();
+                    return;
+                } else {
+                    out.writeBytes(line + "\n\r");
+                    out.flush();
+                }
+
+	    } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+    }
+    /*
+	try {
+	    Socket clientSocket = new Socket(IP, port);
+	    
+	    // create text reader and writer
+	    DataInputStream inStream  = new DataInputStream(clientSocket.getInputStream());
+	    DataOutputStream outStream = new DataOutputStream(clientSocket.getOutputStream());
+	    
+	    /* Send 
+	    outStream.write(buf, 0, buf.length);
+	    outStream.flush();	 	    
+	}
+        catch (Exception e) {
+            // Throwing an exception
+            System.out.println ("Exception is caught");
+        }
+    }
+	
+}
+*/
+
+class PingPongHandler implements Runnable {
+
+    ArrayList<String> hostCache;
+
+    // Constructor for this thread
+    public PingPongHandler(ArrayList<String> hostCache) {
+        this.hostCache = hostCache;
+    }
+
+    // Start by connecting to a host in the network
+    public void run() {
+
+	try {
+	    // Connect to the first host in the list
+	    String serventIP = hostCache.get(0);
+	    Socket clientSocket = new Socket(serventIP, 53953);
+
+	    /* Prepare a startPingBuf */
+	    /* |IP|Port|Number of shared files| */
+	    byte[] startPingBuf = new byte[12];
+	    InetAddress address = InetAddress.getLocalHost();
+	    String IP = address.getHostAddress();
+
+	    // Convert data to bytes
+	    
+	    /* Prepare a descriptor header  */
+	    /* |Message ID|Payload Descriptor|TTL|Hops|Payload Length| */
+	    byte[] header = new byte[29];
+	    String msgID = "StartPing";
+	    byte payloadDesc = 0x03;
+	    int ttl = 2;
+	    int hops = 0;
+	    int payloadLength = sizeof(startPingBuf);
+	    
+	    // Convert data to bytes
+	    
+	    // create text reader and writer
+	    DataInputStream inStream  = new DataInputStream(clientSocket.getInputStream());
+	    DataOutputStream outStream = new DataOutputStream(clientSocket.getOutputStream());
+	    
+	    /* Send */
+	    outStream.write(buf, 0, buf.length);
+	    outStream.flush();
+	 	    
+	}
+        catch (Exception e) {
+            // Throwing an exception
+            System.out.println ("Exception is caught");
+        }
+    }
+}
+
+public class Servent
+{
+    static final int PORT = 53953;
+    /*
+    public Server(int port) throws IOException {
+    serverSocket = new ServerSocket(port);
+    serverSocket.setSoTimeout(10000);
+    }
+    */
+    
+    public static void main(String args[]) throws IOException
+    {
+	ArrayList<String> hostCache = new ArrayList<String>();
+	
+	ServerSocket serverSocket;
+	Socket clientSocket;
+       	
+	// Well-known host "pyrite-n2"  
+	hostCache.add("10.27.18.245");
+	
+	// Server socket
+	try {
+	    serverSocket = new ServerSocket(PORT);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+
+	// Start a thread to handle ping and pong 
+	new PingPongHandler(hostCache).start();
+	
+	/* As a SERVER, listen for connections */ 
+	while (true) {
+	    try {
+		System.out.println("Listening...\n\n");		
+		// Client socket
+		clientSocket = serverSocket.accept();
+		System.out.println("A new servent has connected. \n\n");
+	    } catch (IOException e) {
+		System.out.println("I/O error: " + e);
+	    }
+	    // new thread for a client
+	    // new QueryHandler(clientSocket).start();
+	}
+    	
+	/*
+	Thread QueryHandler = new Thread (new QueryHandler());
+        QueryHandler.start();
+	*/     
+    }   
+}
